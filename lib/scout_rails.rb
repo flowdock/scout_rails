@@ -24,7 +24,7 @@ require File.expand_path('../scout_rails/transaction_sample.rb', __FILE__)
 require File.expand_path('../scout_rails/instruments/process/process_cpu.rb', __FILE__)
 require File.expand_path('../scout_rails/instruments/process/process_memory.rb', __FILE__)
 
-if defined?(Rails) and Rails.respond_to?(:version) and Rails.version =~ /^3/
+if defined?(Rails) and Rails.respond_to?(:version) and Rails.version >= '3'
   module ScoutRails
     class Railtie < Rails::Railtie
       initializer "scout_rails.start" do |app|
