@@ -6,8 +6,6 @@ class ScoutRails::Store
   MAX_SIZE = 1000
   
   attr_accessor :metric_hash
-  attr_accessor :transaction_hash
-  attr_accessor :stack
   attr_accessor :sample
   attr_reader :transaction_sample_lock
   
@@ -26,10 +24,20 @@ class ScoutRails::Store
   def reset_transaction!
     Thread::current[:ignore_transaction] = nil
     Thread::current[:scout_scope_name] = nil
-    @transaction_hash = Hash.new
-    @stack = Array.new
+    Thread::current[:stack] = []
+    Thread::current[:transaction_hash] = {}
   end
-  
+
+  def stack
+    Thread::current[:stack] ||= []
+  end
+
+  def transaction_hash
+    # Stores aggregate metrics for the current transaction. When the transaction is finished, metrics
+    # are merged with the +metric_hash+.
+    Thread::current[:transaction_hash] ||= {}
+  end
+
   def ignore_transaction!
     Thread::current[:ignore_transaction] = true
   end
