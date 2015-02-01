@@ -67,6 +67,7 @@ module ScoutRails
                     elsif unicorn? then :unicorn
                     elsif thin? then :thin
                     elsif webrick? then :webrick
+                    elsif puma? then :puma
                     else nil
                     end
     end
@@ -104,11 +105,18 @@ module ScoutRails
         ObjectSpace.each_object(::Unicorn::HttpServer) { |x| return true }
       end
     end
-    
+
+    def puma?
+      if defined?(::Puma) && defined?(::Puma::Cluster)
+        require 'puma/cluster'
+        ObjectSpace.each_object(::Puma::Cluster) { |x| return true }
+      end
+    end
+
     # If forking, don't start worker thread in the master process. Since it's started as a Thread, it won't survive
     # the fork. 
     def forking?
-      passenger? or unicorn? or rainbows?
+      passenger? or unicorn? or rainbows? or puma?
     end
     
     ### ruby checks
