@@ -66,6 +66,7 @@ module ScoutRails
       if !start_background_worker?
         logger.debug "Not starting worker thread"
         install_passenger_events if environment.app_server == :passenger
+        install_puma_process_client if environment.app_server == :puma
         install_unicorn_worker_loop if environment.app_server == :unicorn
         install_rainbows_worker_loop if environment.app_server == :rainbows
         return
@@ -153,7 +154,18 @@ module ScoutRails
           old.bind(self).call(worker)
         end
       end
-    end    
+    end
+
+    def install_puma_process_client
+      logger.debug "Installing Puma process client."
+      Puma::Cluster.class_eval do
+        old = instance_method(:worker)
+        define_method(:worker) do |index, master|
+          ScoutRails::Agent.instance.start_background_worker
+          old.bind(self).call(index, master)
+        end
+      end
+    end
     
     # Creates the worker thread. The worker thread is a loop that runs continuously. It sleeps for +Agent#period+ and when it wakes,
     # processes data, either saving it to disk or reporting to Scout.
